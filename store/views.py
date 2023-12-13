@@ -18,6 +18,17 @@ def store(request, category_slug=None):
     else:
         products = Product.objects.all().filter(is_available=True).order_by('id')
 
+    sizes = {variation.variation_value for product in products for variation in product.variation_set.filter(variation_category='size')}
+    colors = {variation.variation_value for product in products for variation in product.variation_set.filter(variation_category='color')}
+
+    if 'sizes' in request.GET:
+        selected_sizes = request.GET.getlist('sizes')
+        products = products.filter(variation__variation_category='size', variation__variation_value__in=selected_sizes)
+
+    if 'colors' in request.GET:
+        selected_colors = request.GET.getlist('colors')
+        products = products.filter(variation__variation_category='color', variation__variation_value__in=selected_colors)
+
     page = request.GET.get('page')
     page = page or 1
     paginator = Paginator(products, 3)
@@ -27,6 +38,8 @@ def store(request, category_slug=None):
     context = {
         'products': paged_products,
         'product_count': product_count,
+        'sizes': sizes,
+        'colors': colors,
     }
     return render(request, 'store/store.html', context=context)
 
@@ -61,16 +74,39 @@ def product_detail(request, category_slug, product_slug=None):
 
 
 def search(request):
+    q = '' # init q
+    products = Product.objects.all()
+
     if 'q' in request.GET:
         q = request.GET.get('q')
-        products = Product.objects.order_by('-created_date').filter(Q(product_name__icontains=q) | Q(description__icontains=q))
-        product_count = products.count()
+        products = products.filter(Q(product_name__icontains=q) | Q(description__icontains=q))
+
+    if 'sizes' in request.GET:
+        sizes = request.GET.getlist('sizes')
+        products = products.filter(variation__variation_category='size', variation__variation_value__in=sizes)
+
+    if 'colors' in request.GET:
+        colors = request.GET.getlist('colors')
+        products = products.filter(variation__variation_category='color', variation__variation_value__in=colors)
+
+    if 'min_price' in request.GET and request.GET.get('min_price').isdigit():
+        min_price = request.GET.get('min_price')
+        products = products.filter(price__gte=min_price)
+
+    if 'max_price' in request.GET and request.GET.get('max_price').isdigit():
+        max_price = request.GET.get('max_price')
+        products = products.filter(price__lte=max_price)
+
+    products = products.order_by('-created_date')
+    product_count = products.count()
+
     context = {
         'products': products,
         'q': q,
         'product_count': product_count
     }
-    return render(request, 'store/store.html', context=context)
+
+    return render(request, 'store/store.html', context)
 
 
 def submit_review(request, product_id):
