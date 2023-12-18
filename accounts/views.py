@@ -13,6 +13,7 @@ from django.db import transaction
 
 from .forms import RegistrationForm
 from accounts.models import Account
+from orders.models import Order, Payment
 from carts.views import _cart_id
 
 import requests
@@ -142,7 +143,8 @@ def activate(request, uidb64, token):
 
 @login_required(login_url="login")
 def dashboard(request):
-    return render(request, "accounts/dashboard.html")
+    orders = Order.objects.select_related('payment').filter(user=request.user).exclude(payment_id=None)
+    return render(request, "accounts/dashboard.html",{'orders': orders})
 
 @transaction.atomic()
 def forgotPassword(request):

@@ -24,6 +24,15 @@
                             <div class="mb-3">
                                 <var class="price h4">${{ single_product.price }}</var>
                             </div>
+                            <div class="rating-star">
+                                <span>
+                                    <i class="fa fa-star{% if rating.rating__avg == 0.5 %}-half-o{% elif rating.rating__avg < 1 %}-o {% endif %}" aria-hidden="true"></i>
+                                    <i class="fa fa-star{% if rating.rating__avg == 1.5 %}-half-o{% elif rating.rating__avg < 2 %}-o {% endif %}" aria-hidden="true"></i>
+                                    <i class="fa fa-star{% if rating.rating__avg == 2.5 %}-half-o{% elif rating.rating__avg < 3 %}-o {% endif %}" aria-hidden="true"></i>
+                                    <i class="fa fa-star{% if rating.rating__avg == 3.5 %}-half-o{% elif rating.rating__avg < 4 %}-o {% endif %}" aria-hidden="true"></i>
+                                    <i class="fa fa-star{% if rating.rating__avg == 4.5 %}-half-o{% elif rating.rating__avg < 5 %}-o {% endif %}" aria-hidden="true"></i>
+                                </span>
+                            </div>
                             <p>{{ single_product.description }}</p>
                             <hr />
                             <div class="row">

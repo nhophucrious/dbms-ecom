@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db import transaction
+from django.db.models import Avg
 
 from store.models import Product, ReviewRating
 from carts.models import Cart, CartItem
@@ -64,12 +65,14 @@ def product_detail(request, category_slug, product_slug=None):
         orderproduct = None
 
     reviews = ReviewRating.objects.filter(product_id=single_product.id, status=True)
+    rating = ReviewRating.objects.filter(product_id=single_product.id, status=True).aggregate(Avg("rating", default=0))
 
     context = {
         'single_product': single_product,
         'in_cart': in_cart if 'in_cart' in locals() else False,
         'orderproduct': orderproduct,
         'reviews': reviews,
+        'rating': rating,
     }
     return render(request, 'store/product_detail.html', context=context)
 

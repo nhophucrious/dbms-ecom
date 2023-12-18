@@ -25,7 +25,6 @@ def sendEmail(request, order):
 
 
 def payments(request):
-    print(request)
     try:
         if request.is_ajax() and request.method == 'POST':
             with transaction.atomic():
