@@ -1,7 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
-
+from django.db import transaction
 from store.models import Product, Variation
 from carts.models import Cart, CartItem
 
@@ -12,6 +12,7 @@ def _cart_id(request):
         cart_id = request.session.create()
     return cart_id
 
+@transaction.atomic()
 def add_cart(request, product_id):
     current_user = request.user
     product = Product.objects.get(id=product_id)    # Get object product
@@ -107,7 +108,7 @@ def add_cart(request, product_id):
         cart_item.save()
         return redirect('cart')
 
-
+@transaction.atomic()
 def remove_cart(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
     try:
@@ -133,18 +134,18 @@ def remove_cart(request, product_id, cart_item_id):
         pass
     return redirect('cart')
 
-
+@transaction.atomic()
 def remove_cart_item(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
     try:
         if request.user.is_authenticated:
-            cart_item = CartItem.objects.get(
+            cart_item = CartItem.objects.select_for_update().get(
                 id=cart_item_id,
                 product=product,
                 user=request.user
             )
         else:
-            cart = Cart.objects.get(cart_id=_cart_id(request=request))
+            cart = Cart.objects.select_for_update().get(cart_id=_cart_id(request=request))
             cart_item = CartItem.objects.get(
                 id=cart_item_id,
                 product=product,

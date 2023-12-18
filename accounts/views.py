@@ -9,6 +9,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
+from django.db import transaction
 
 from .forms import RegistrationForm
 from accounts.models import Account
@@ -16,7 +17,7 @@ from carts.views import _cart_id
 
 import requests
 
-
+@transaction.atomic()
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -57,7 +58,7 @@ def register(request):
     }
     return render(request, 'accounts/register.html', context)
 
-
+@transaction.atomic()
 def login(request):
     if request.method == "POST":
         email = request.POST.get('email')
@@ -143,7 +144,7 @@ def activate(request, uidb64, token):
 def dashboard(request):
     return render(request, "accounts/dashboard.html")
 
-
+@transaction.atomic()
 def forgotPassword(request):
     try:
         if request.method == 'POST':
@@ -171,7 +172,7 @@ def forgotPassword(request):
         }
         return render(request, "accounts/forgotPassword.html", context=context)
 
-
+@transaction.atomic()
 def reset_password_validate(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
@@ -187,7 +188,7 @@ def reset_password_validate(request, uidb64, token):
         messages.error(request=request, message="This link has been expired!")
         return redirect('home')
 
-
+@transaction.atomic()
 def reset_password(request):
     if request.method == 'POST':
         password = request.POST.get('password')
@@ -195,7 +196,7 @@ def reset_password(request):
 
         if password == confirm_password:
             uid = request.session.get('uid')
-            user = Account.objects.get(pk=uid)
+            user = Account.objects.select_for_update().get(pk=uid)
             user.set_password(password)
             user.save()
             messages.success(request, message="Password reset successful!")

@@ -80,7 +80,8 @@ DATABASES = {
         'PORT': env("DATABASE_PORT"),
         'OPTIONS': {
             'unix_socket': '/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock',
-        }
+        },
+        'ATOMIC_REQUESTS': True,
     }
 }
 

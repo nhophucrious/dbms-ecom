@@ -4,13 +4,14 @@ from store.forms import ReviewForm
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db import transaction
 
 from store.models import Product, ReviewRating
 from carts.models import Cart, CartItem
 from category.models import Category
 from carts.views import _cart_id
 
-
+@transaction.atomic()
 def store(request, category_slug=None):
     if category_slug is not None:
         categories = get_object_or_404(Category, slug=category_slug)
@@ -43,7 +44,7 @@ def store(request, category_slug=None):
     }
     return render(request, 'store/store.html', context=context)
 
-
+@transaction.atomic()
 def product_detail(request, category_slug, product_slug=None):
     try:
         single_product = Product.objects.get(category__slug=category_slug, slug=product_slug)
@@ -72,7 +73,7 @@ def product_detail(request, category_slug, product_slug=None):
     }
     return render(request, 'store/product_detail.html', context=context)
 
-
+@transaction.atomic()
 def search(request):
     q = '' # init q
     products = Product.objects.all()
@@ -108,7 +109,7 @@ def search(request):
 
     return render(request, 'store/store.html', context)
 
-
+@transaction.atomic()
 def submit_review(request, product_id):
     url = request.META.get('HTTP_REFERER')
     if request.method == "POST":
