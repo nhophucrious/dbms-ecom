@@ -161,12 +161,13 @@ def order_complete(request):
     transID = request.GET.get('payment_id')
     
     try:
-        order = Order.objects.get(order_number=order_number, is_ordered=True)
-        ordered_products = OrderProduct.objects.filter(order_id=order.id)
+        order = Order.objects.filter(order_number=order_number, is_ordered=True).first()
 
-        subtotal = 0
-        for i in ordered_products:
-            subtotal += i.product_price * i.quantity
+        ordered_products = OrderProduct.objects.filter(
+            order__in=Order.objects.filter(order_number=order_number, is_ordered=True)
+        )
+
+        subtotal = sum(i.product_price * i.quantity for i in ordered_products) 
 
         payment = Payment.objects.get(payment_id=transID)
 
